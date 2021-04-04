@@ -1,6 +1,7 @@
 from hashlib import md5
 
-SECRET = '1231231fdsfsa'
+SECRET = 'qwerty'
+
 
 def create_user(username, password):
     user = {

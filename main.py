@@ -1,15 +1,16 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_pymongo import PyMongo
 import jwt
 import re
-from game import create_game, X, O, step, join_game
+import os
+from game import create_game, X, O, step
 from user import create_user, compare_passwords, SECRET
 from functools import wraps
 from flask_socketio import SocketIO, join_room, leave_room
 
 MONGO_URI = 'mongodb+srv://root:xQ8LDJSY@cluster0.88mra.mongodb.net/tictactoe?retryWrites=true&w=majority'
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='client/build')
 mongo_client = PyMongo(app, uri=MONGO_URI, ssl=True, ssl_cert_reqs='CERT_NONE')
 db = mongo_client.db
 
@@ -124,6 +125,17 @@ def create_game_handler(current_user):
     db.games.insert_one(game)
     return jsonify(game, size, first_step)
 
+# Server React application
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
+
+
+# SocketIO implementation
 
 async_mode = None
 socket_ = SocketIO(app, async_mode=async_mode)
