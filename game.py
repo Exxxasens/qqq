@@ -1,6 +1,6 @@
 EMPTY = 0
 X = 1
-O = 1
+O = 2
 
 
 def create_game(user_id, n, next_step):
@@ -23,8 +23,18 @@ def start_game(game):
     game['status'] = 'started'
     return game
 
+
 def end_game(game):
     game['status'] = 'finished'
+    return game
+
+
+def is_game_end(game):
+    return False
+
+
+def step(game):
+
     return game
 
 

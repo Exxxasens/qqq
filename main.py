@@ -2,9 +2,10 @@ from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 import jwt
 import re
-from game import create_game, X, O
+from game import create_game, X, O, step, join_game
 from user import create_user, compare_passwords, SECRET
 from functools import wraps
+from flask_socketio import SocketIO, join_room, leave_room
 
 MONGO_URI = 'mongodb+srv://root:xQ8LDJSY@cluster0.88mra.mongodb.net/tictactoe?retryWrites=true&w=majority'
 
@@ -100,7 +101,6 @@ def create_game_handler(current_user):
     except:
         return jsonify(error=True, result='Не удалось распарсить JSON')
 
-
     try:
         size = int(body['size']) or 3
     except:
@@ -121,7 +121,74 @@ def create_game_handler(current_user):
         return jsonify(error=True, result='Параметр first_step может принимать значение 1 или 0')
 
     game = create_game(current_user['id'], size, first_step)
+    db.games.insert_one(game)
     return jsonify(game, size, first_step)
+
+
+async_mode = None
+socket_ = SocketIO(app, async_mode=async_mode)
+
+
+@socket_.on('join_game')
+def on_join_game(data):
+    if not (data['token'] and data['game_id']):
+        print('token and game_id are required params')
+        return
+
+    user_token = data['token']
+    game_id = data['game_id']
+
+    game = db.games.find_one({'_id': game_id})
+    join_room(game_id)
+    user = jwt.decode(user_token, SECRET, algorithms=["HS256"])
+
+    if not game.second_player and not game.first_player == user['id']:
+        query = {'_id': data['game_id']}
+        update = {'$set': {'second_player': user['id']}}
+        db.games.update_one(query, update)
+        socket_.emit('second_player_join_game', {'username': user['username']}, room=data['game_id'])
+
+    socket_.emit('join_game_announcement', {'username': user['username']}, room=data['game_id'])
+
+
+@socket_.on('leave_game')
+def on_leave_game(data):
+    if not (data['game_id'] and data['token']):
+        print('game_id and token are required params')
+        return
+
+    user = jwt.decode(data['token'], SECRET, algorithms=["HS256"])
+    leave_room(data['game_id'])
+    socket_.emit('leave_game_announcement', {'username': user['username']}, room=data['game_id'])
+
+
+@socket_.on('step')
+def on_step(data):
+    if not (data['game_id'] and data['token'] and data['x'] and data['y']):
+        print('game_id and token are required params')
+        return
+
+    game_id = data['game_id']
+    user_token = data['token']
+
+    user = jwt.decode(user_token, SECRET, algorithms=["HS256"])
+    game = db.games.find_one({'_id': game_id})
+
+    if not game.status == 'started':
+        print('game is not started...')
+        return
+
+    if (game.next_step == 1 and game.first_player == user['id'] or
+            game.next_step == 0 and game.second_player == user['id']):
+
+        game = step(data['y'], data['x'])
+        db.games.update_one({'_id': game_id}, game)
+        socket_.emit('game_update', game, room=game_id)
+        print('game updated')
+
+    else:
+        print('user is not authorized')
+        return
 
 
 if __name__ == "__main__":
