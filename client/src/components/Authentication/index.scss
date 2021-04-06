@@ -1,0 +1,133 @@
+.login-wrapper, .register-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    flex-grow: 1;
+    color: #282c34;
+}
+.register.successful {
+    div {
+        margin: 0 0 1.25rem 0;
+    }
+    a {
+        margin: 0 !important;
+    }
+}
+.login, .register {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 2.5rem;
+    background-color: white;
+    border-radius: 1rem;
+    max-width: 100%;
+    width: 380px;
+
+    a {
+        margin: 0 0.25rem;
+    }
+
+    h1 {
+        margin: 1.25rem 0;
+        color: inherit;
+    }
+    
+    .form-wrapper {
+        width: 100%;
+    }
+
+    .info {
+        color: rgb(255, 88, 88);
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        .input-wrapper {
+            width: 100%;
+        }
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 17px;
+            line-height: 1.25;
+            margin: 0.5rem 0;
+            border: 1px solid #aaa;
+            border-radius: 5px;
+            position: relative;
+            background: transparent;
+            color: #777777;
+            &:focus {
+                outline: none;
+                border-color: rgb(113, 88, 255);
+                box-shadow: 0px 0px 0px 1px rgb(113, 88, 255);
+                color: #282c34;
+            }
+        }
+        input[aria-invalid="true"] {
+            border-color: rgb(255, 88, 88);
+            box-shadow: 0px 0px 0px 1px rgb(255, 88, 88);
+        }
+        .error {
+            font-size: 13px;
+            color: rgb(255, 88, 88);
+        }
+        .btn-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            .submit-btn {
+                margin: 1.25rem 0;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 0.5rem 1.5rem;
+                background: #282c34;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                &:focus {
+                    outline: none;
+                }
+                &:valid:hover {
+                    box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.15);
+                    cursor: pointer;
+                }
+                &:disabled {
+                    color: #282c34;
+                    background: rgb(240, 240, 240);
+                    box-shadow: none;
+                }
+            }
+        }
+        .criteria {
+            font-size: 13px;
+            .criteria-item {
+                margin: 2px 0;
+                &:before {
+                    margin-right: 3px;
+                    font-size: 14px;
+                }
+            }
+            .criteria-item[data-valid="true"] {
+                &:before {
+                    content: '\2713';
+                    color: rgb(70, 212, 57);
+                    
+                }
+            }
+            .criteria-item[data-valid="false"] {
+                &:before {
+                    content: '\2717 ';
+                    color: rgb(255, 88, 88);
+                }
+            }
+        }
+
+    }
+
+
+
+}

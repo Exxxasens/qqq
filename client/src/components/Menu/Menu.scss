@@ -1,0 +1,33 @@
+.menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+
+    .item {
+        display: flex;
+        flex-direction: column;
+        margin: 1rem;
+        background: white;
+        color: #333;
+
+        font-weight: bold;
+
+        &:hover {
+            background: #61dafb;
+            color: white;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            padding: 1rem;
+            &:active {
+                color: inherit;
+            }
+            &:visited {
+                color: inherit;
+            }
+        }
+    }
+}
