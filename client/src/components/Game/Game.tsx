@@ -15,10 +15,7 @@ type Game = {
 
 const copyGame = (game: Game) => {
     if (game && game.game_field) {
-        const game_field = game.game_field
-            .map(row => 
-                row.map(cell => cell)
-            );
+        const game_field = game.game_field.map(row => row.map(cell => cell));
         return {
             ...game,
             game_field
@@ -34,12 +31,16 @@ const Game = ({ userId }: any) => {
     const [currentSocket, setCurrentSocket] = React.useState(initialState);
     const [error, setError] = React.useState(null);
     const [isLoading, setLoading] = React.useState(true);
-    const [firstPlayer, setFirstPlayer] = React.useState('');
-    const [secondPlayer, setSecondPlayer] = React.useState('');
 
     const handleCellClick = React.useCallback((y:number, x:number) => {
-        currentSocket.emit('step', { game_id: id, token: userId, y, x });
-    }, [id, userId]);
+        console.log(game);
+        const { next_step } = game;
+        if ((next_step === 1 && isUserFirstPlayer(userId)) || (next_step === 2 && isUserSecondPlayer(userId))) {
+            console.log('user make a step!');
+            console.log({ game_id: id, token: userId, y, x });
+            currentSocket.emit('step', { game_id: id, token: userId, y, x });
+        }
+    }, [id, userId, game]);
 
     const isUserFirstPlayer = (id: string) => game && game.hasOwnProperty('first_player') && game.first_player === id;
     const isUserSecondPlayer = (id: string) => game && game.hasOwnProperty('second_player') && game.second_player === id;
@@ -58,21 +59,22 @@ const Game = ({ userId }: any) => {
         client.on('leave_game_announcement', payload => console.log('leave_game_announcement', payload));
 
         client.on('second_player_join_game', payload => {
+            const { game } = payload; // update game and game status
             setGame((state:any) => {
-                let game: Game = { ...copyGame(state), second_player: payload.id || '' }
-                return game;
-            })
+                return  { ...copyGame(state), ...game };
+            });
         });
 
         client.emit('join_game', { token, game_id: id });
 
         client.on('game_data', payload => {
-            console.log(payload);
+            console.log('game data', payload);
             const response = JSON.parse(payload);
-            if (response.error) return setError(response.error);
             setGame(response);
             setLoading(false);
         });
+
+        client.on('error', payload => console.error(payload));
 
         return () => {
             client.emit('leave_game', { token, game_id: id });
@@ -101,7 +103,6 @@ const Game = ({ userId }: any) => {
     }
 
     // successfully loaded
-    console.log(game);
     const { game_field, next_step, status, first_player, second_player } = game;
     return (
         <div className='game'>
@@ -112,7 +113,7 @@ const Game = ({ userId }: any) => {
                 </div>
                 <div>
                     <div className='title'>Игрок 2:</div>
-                    <div className='name'>{ second_player }</div>
+                    <div className='name'>{ second_player || 'Ожидание игрока' }</div>
                 </div>
             </div>
             <Field 

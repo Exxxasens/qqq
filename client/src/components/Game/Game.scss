@@ -1,11 +1,14 @@
-.players {
-    margin: 1rem 0;
-    border: 1px solid #3b3b3b;
-    > div {
-        padding: 0.5rem;
-        .title {
-            margin-right: 0.25rem;
-            font-weight: bold;
+.game {
+    margin: 1rem;
+    .players {
+        margin: 0 0 1rem 0;
+        border: 1px solid #505050;
+        > div {
+            padding: 0.5rem;
+            .title {
+                margin-right: 0.25rem;
+                font-weight: bold;
+            }
         }
     }
 }

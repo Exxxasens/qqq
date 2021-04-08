@@ -6,6 +6,7 @@ import './App.scss';
 import { connect } from 'react-redux';
 import { Login, Register } from '../Authentication'
 import Game from '../Game';
+import CreateGame from '../CreateGame';
 
 type AppProps = {
     userId: string
@@ -23,7 +24,10 @@ const App = ({ userId }: AppProps) => {
                             isAuth ? <Menu/> : <Login/>
                         }
                     </Route>
-                    <Route path='/game/:id' children={<Game/>}/>
+                    <Route path='/create' exact>
+                        <CreateGame/>
+                    </Route>
+                    <Route path='/game/:id' children={<Game/>} exact/>
                 </Switch>
             </div>
         </Router>

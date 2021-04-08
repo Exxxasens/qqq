@@ -1,0 +1,72 @@
+.create-game {
+    display: flex;
+    flex-direction: column;
+    margin-top: 1rem;
+    padding: 2rem;
+    border: 1px solid #505050;
+    border-radius: 0.5rem;
+
+    h1 {
+        margin: 0 0 1rem 0;
+    }
+
+    .discription {
+        margin-bottom: 2rem;
+    }
+
+    .submit-btn-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 2rem;
+        button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #505050;
+            background: transparent;
+            color: white;
+            font-weight: bold;
+            outline: none;
+            &:hover {
+                background: #505050;
+                cursor: pointer;
+            }
+        }
+    }
+
+    form {
+        .input-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+            border-bottom: 1px solid #505050;
+            label {
+                margin-right: 1rem;
+                font-weight: bold;
+            }
+            input {
+                padding: 0.5rem;
+                width: 4rem;
+                background: #505050;
+                box-shadow: none;
+                border: none;
+                color: inherit;
+                outline: none;
+                border: none;
+                margin: 0.5rem 0;
+                font-size: 1rem;
+                margin-left: auto;
+            }
+            select {
+                padding: 0.5rem;
+                background: #505050;
+                color: inherit;
+                outline: none;
+                border: none;
+                margin: 0.5rem 0;
+                font-size: 1rem;
+                margin-left: auto;
+            }
+        }
+    }
+}

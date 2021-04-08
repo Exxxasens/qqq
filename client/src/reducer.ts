@@ -15,10 +15,11 @@ const reducer = (state: any, action: ActionType) => {
     if (!state) {
         const token = window.localStorage.getItem('token');
         if (token) {
-            const { id } = parseJWT(token);
+            const { id, username } = parseJWT(token);
             return {
                 ...defaultState,
-                userId: id
+                userId: id,
+                username
             }
         }
         return {

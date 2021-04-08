@@ -12,6 +12,7 @@ class ApiService {
     }
 
     fetchResource = async (url: string, config: object) => {
+        console.log(config);
         const response = await fetch(url, config);
         return this.handleNetworkErrors(response);
     }
@@ -40,6 +41,7 @@ class ApiService {
             body: JSON.stringify(body)
         }
         const token = await this.fetchResource('/api/login', config);
+        this.token = token;
         window.localStorage.setItem('token', token);
         return token;
     }
@@ -57,6 +59,20 @@ class ApiService {
             body: JSON.stringify(body)
         }
         return this.fetchResource('/api/register', config);
+    }
+
+    fetchWithToken = async (url: string, config:any = {}) => {
+        if (!url) throw new Error('Url is required parameter');
+        const Authorization = 'Bearer ' + this.token;
+        if (config.hasOwnProperty('headers')) {
+            config.headers.Authorization = Authorization;
+        } else {
+            config.headers = {
+                Authorization
+            }
+        }
+
+        return this.fetchResource(url, config);
     }
 
 }
