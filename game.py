@@ -14,11 +14,6 @@ def create_game(user_id, n, next_step):
     return game
 
 
-def join_game(game, user_id):
-    game['second_player'] = user_id
-    return game
-
-
 def start_game(game):
     game['status'] = 'started'
     return game
@@ -30,16 +25,24 @@ def end_game(game):
 
 
 def is_game_end(game):
-    return False
+    pass
 
 
-def step(game):
+def step(game, y, x):
+    if game.next_step == X:
+        game['game_field'][y][x] = X;
+    if game.next_step == O:
+        game['game_field'][y][x] = O;
+
+    if is_game_end(game):
+        game = end_game(game)
 
     return game
 
 
 def create_field(n):
     field = []
+
     for i in range(n):
         row = []
         for j in range(n):

@@ -1,20 +1,20 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_pymongo import PyMongo
+from game import create_game, X, O, step
+from user import create_user, compare_passwords
+from functools import wraps
+from settings import MONGO_URI, SECRET
+from flask_socketio import SocketIO, join_room, leave_room
+from bson.objectid import ObjectId
 import jwt
 import re
 import os
-from game import create_game, X, O, step
-from user import create_user, compare_passwords, SECRET
-from functools import wraps
-from flask_socketio import SocketIO, join_room, leave_room
+import json
 
-MONGO_URI = 'mongodb+srv://root:xQ8LDJSY@cluster0.88mra.mongodb.net/tictactoe?retryWrites=true&w=majority'
 
 app = Flask(__name__, static_folder='client/build')
 mongo_client = PyMongo(app, uri=MONGO_URI, ssl=True, ssl_cert_reqs='CERT_NONE')
 db = mongo_client.db
-
-db.users.create_index('username', name='username_index', )
 
 
 def on_except(): return jsonify(error=True, result='Произошла неизвестная ошибка')
@@ -35,6 +35,7 @@ def auth_required(f):
 
         try:
             data = jwt.decode(token, SECRET, algorithms=["HS256"])
+            print(data)
             return f(data, *args, **kwargs)
 
         except:
@@ -78,7 +79,7 @@ def login():
         if not body['password']:
             return jsonify(error=True, result='Поле password обязательное')
 
-        found_user = db.users.find_one({'username': body['username']})
+        found_user = db.users.find_one({'username': re.compile(body['username'], re.IGNORECASE)})
 
         if not found_user:
             return jsonify(error=True, result='Пользователь с таким именем или паролем не найден')
@@ -99,18 +100,12 @@ def login():
 def create_game_handler(current_user):
     try:
         body = request.get_json(force=True)
-    except:
-        return jsonify(error=True, result='Не удалось распарсить JSON')
-
-    try:
         size = int(body['size']) or 3
-    except:
-        return jsonify(error=True, result='Неверный размер игрового поля')
-
-    try:
         first_step = int(body['first_step']) or 1
-    except:
-        return jsonify(error=True, result='Неверный параметр first_step')
+    except (ValueError, KeyError, TypeError) as error:
+        app.logger(error)
+        resp = Response({"Ошибка в JSON"}, status=400, mimetype='application/json')
+        return resp
 
     if size > 10:
         return jsonify(error=True, result='Максимальный размер игрового поля 10')
@@ -123,9 +118,10 @@ def create_game_handler(current_user):
 
     game = create_game(current_user['id'], size, first_step)
     db.games.insert_one(game)
-    return jsonify(game, size, first_step)
+    return jsonify(error=False, result=str(game['_id']))
 
-# Server React application
+
+# Serve React application
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
@@ -136,70 +132,140 @@ def serve(path):
 
 
 # SocketIO implementation
-
 async_mode = None
 socket_ = SocketIO(app, async_mode=async_mode)
+clients = []
+
+
+def find_client(sid):
+    for client in clients:
+        if client['room'] and client['sid'] == sid:
+            return client
 
 
 @socket_.on('join_game')
 def on_join_game(data):
+    app.logger.info("{} has join game {}. ".format(data['token'], data['game_id']))
+
+    client = find_client(request.sid)
+
+    if client:
+        app.logger.info('{} is already joined game {}').format(request.sid, data['game_id'])
+
     if not (data['token'] and data['game_id']):
-        print('token and game_id are required params')
+        app.logger.info('token or game_id are not specified')
         return
 
     user_token = data['token']
     game_id = data['game_id']
+    game = db.games.find_one({'_id': ObjectId(game_id)})
 
-    game = db.games.find_one({'_id': game_id})
+    if not game:
+        app.logger.info('game with given game_id are not found')
+        return
+
     join_room(game_id)
     user = jwt.decode(user_token, SECRET, algorithms=["HS256"])
 
-    if not game.second_player and not game.first_player == user['id']:
-        query = {'_id': data['game_id']}
-        update = {'$set': {'second_player': user['id']}}
+    if not game['second_player'] and not str(game['first_player']) == user['id']:
+        app.logger.info('{} connected to game {}'.format(user['id'], game['_id']))
+        query = {'_id': ObjectId(data['game_id'])}
+        update = {'$set': {'second_player': user['id'], 'status': 'started'}}
         db.games.update_one(query, update)
         socket_.emit('second_player_join_game', {'username': user['username']}, room=data['game_id'])
 
-    socket_.emit('join_game_announcement', {'username': user['username']}, room=data['game_id'])
+    join_payload = {
+        'username': user['username'],
+        'user_id': user['id']
+    }
+    client_payload = {
+        'sid': request.sid,
+        'username': user['username'],
+        'user_id': user['id'],
+        'room': data['game_id']
+    }
+    game_json = json.dumps(game, default=str)
+    socket_.emit('join_game_announcement', join_payload, room=data['game_id'])
+    socket_.emit('game_data', game_json, room=request.sid)
+    clients.append(client_payload)
+
+
+@socket_.on('disconnect')
+def on_disconnect():
+    client = find_client(request.sid)
+    if client:
+        payload = {
+            'username': client['username'],
+            'user_id': client['user_id']
+        }
+        socket_.emit('leave_game_announcement', payload, room=client['room'])
+
+    for idx in range(len(clients)-1):
+        if clients[idx]['sid'] == request.sid:
+            del clients[idx]
 
 
 @socket_.on('leave_game')
 def on_leave_game(data):
+    app.logger.info("{} has left game {}. ".format(data['token'], data['game_id']))
     if not (data['game_id'] and data['token']):
-        print('game_id and token are required params')
+        app.logger.info('token or game_id are not specified')
         return
 
     user = jwt.decode(data['token'], SECRET, algorithms=["HS256"])
     leave_room(data['game_id'])
-    socket_.emit('leave_game_announcement', {'username': user['username']}, room=data['game_id'])
+    socket_.emit('leave_game_announcement', {'username': user['username'], 'user_id': user['id']}, room=data['game_id'])
 
 
 @socket_.on('step')
 def on_step(data):
-    if not (data['game_id'] and data['token'] and data['x'] and data['y']):
-        print('game_id and token are required params')
+    if not (data['game_id'] and data['token'] and isinstance(data['x'], int) and isinstance(data['y'], int)):
+        error_payload = {
+            'message': 'game_id, token, x, y обязательные параметры',
+            'event': 'step'
+        }
+        socket_.emit('error', error_payload, room=request.sid)
+        app.logger.info('token or game_id or x or y are not specified')
         return
 
     game_id = data['game_id']
     user_token = data['token']
-
     user = jwt.decode(user_token, SECRET, algorithms=["HS256"])
     game = db.games.find_one({'_id': game_id})
 
+    if not game:
+        error_payload = {
+            'message': 'Игра не найдена',
+            'event': 'step'
+        }
+        socket_.emit('error', error_payload, room=request.sid)
+        app.logger.info('game with given game_id is not found')
+        return
+
     if not game.status == 'started':
-        print('game is not started...')
+        error_payload = {
+            'message': 'Игра уже закончена или ещё не начата',
+            'event': 'step'
+        }
+        socket_.emit('error', error_payload, room=request.sid)
+        app.logger.info('game is not started')
         return
 
     if (game.next_step == 1 and game.first_player == user['id'] or
-            game.next_step == 0 and game.second_player == user['id']):
+            game.next_step == 2 and game.second_player == user['id']):
 
-        game = step(data['y'], data['x'])
+        game = step(game, data['y'], data['x'])
         db.games.update_one({'_id': game_id}, game)
-        socket_.emit('game_update', game, room=game_id)
-        print('game updated')
+        socket_.emit('game_update', game, room=str(game_id))
+        app.logger.info('game updated')
 
     else:
-        print('user is not authorized')
+        error_payload = {
+            'message': 'Пользователь не может совершить ход',
+            'event': 'step'
+        }
+        socket_.emit('error', error_payload, room=request.sid)
+        app.logger.info('user is not authorized')
         return
 
 
