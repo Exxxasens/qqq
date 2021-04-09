@@ -23,6 +23,7 @@ class ApiService {
         }
         const { error, result }:ServerResponse = await response.json();
         if (error) {
+            console.log(result);
             throw new Error(result);
         }
         return result;

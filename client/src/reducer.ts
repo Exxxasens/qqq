@@ -19,7 +19,8 @@ const reducer = (state: any, action: ActionType) => {
             return {
                 ...defaultState,
                 userId: id,
-                username
+                username,
+                token
             }
         }
         return {
@@ -34,13 +35,15 @@ const reducer = (state: any, action: ActionType) => {
             return {
                 ...state,
                 userId: id,
-                username
+                username,
+                token
             }
 
         case 'USER_LOGOUT':
             return {
                 ...state,
-                userId: null
+                userId: null,
+                token: null
             }
 
         default:

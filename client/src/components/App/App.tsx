@@ -1,12 +1,12 @@
 import React from 'react';
 import Menu from '../Menu';
 import { Switch, Route, BrowserRouter as Router  } from 'react-router-dom'
-import PrivateRoute from '../PrivateRoute';
 import './App.scss';
 import { connect } from 'react-redux';
-import { Login, Register } from '../Authentication'
 import Game from '../Game';
 import CreateGame from '../CreateGame';
+import Login from '../Login';
+// import Authentication from '../Authentication';
 
 type AppProps = {
     userId: string
@@ -18,17 +18,30 @@ const App = ({ userId }: AppProps) => {
     return (
         <Router>
             <div className='app'>
-                <Switch>
-                    <Route path='/' exact>
-                        {
-                            isAuth ? <Menu/> : <Login/>
-                        }
-                    </Route>
-                    <Route path='/create' exact>
-                        <CreateGame/>
-                    </Route>
-                    <Route path='/game/:id' children={<Game/>} exact/>
-                </Switch>
+                {
+                    isAuth ? 
+                    (
+                        <>
+                            <Menu/>
+                            <Switch>
+                                
+
+                                <Route path='/create'>
+                                    <CreateGame/>
+                                </Route>
+
+                                <Route path='/game/:id' exact>
+                                    <Game/>
+                                </Route>
+
+                            </Switch>
+                        </>
+                    )
+                    :
+                    (
+                        <Login/>
+                    )
+                }
             </div>
         </Router>
     )

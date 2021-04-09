@@ -1,10 +1,9 @@
 .create-game {
     display: flex;
     flex-direction: column;
-    margin-top: 1rem;
+    margin-top: 2rem;
     padding: 2rem;
     border: 1px solid #505050;
-    border-radius: 0.5rem;
 
     h1 {
         margin: 0 0 1rem 0;
@@ -20,7 +19,7 @@
         align-items: center;
         margin-top: 2rem;
         button {
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 2rem;
             border: 1px solid #505050;
             background: transparent;
             color: white;

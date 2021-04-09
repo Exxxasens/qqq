@@ -1,0 +1,96 @@
+.login-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    margin: 2rem;
+    max-width: 100%;
+
+    .login-page {
+        padding: 1rem 2rem;
+        display: flex;
+        flex-direction: column;
+
+        border: 2px solid #505050;
+
+    }
+
+    .error {
+        font-size: 0.8rem;
+        color: tomato;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        h1 {
+            margin: 0.5rem 0 2rem 0;
+        }
+    }
+
+    .description {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        p {
+            margin: 0;
+        }
+        margin-bottom: 1rem;
+    }
+
+    .login-form {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        .username-input-wrapper, .password-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            margin: 0.5rem 0;
+            .label-wrapper {
+                margin-bottom: 0.5rem;
+                font-weight: bold;
+            }
+            .input-wrapper {
+                display: flex;
+                flex-direction: column;
+                input {
+                    font-size: 16px;
+                    padding: 0.75rem 1rem;
+                    background: transparent;
+                    border: 1px solid #505050;
+                    color: white;
+                    font-family: inherit;
+                    &:focus {
+                        outline: none;
+                        background: #505050;
+                    }
+                }
+            }
+        }
+        .submit-btn-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+            .submit-btn {
+                padding: 0.75rem 2rem;
+                border: 1px solid #505050;
+                background: transparent;
+                color: white;
+                font-weight: bold;
+                outline: none;
+                &:hover {
+                    background: #505050;
+                    cursor: pointer;
+                }
+            }
+        }
+
+    }
+}

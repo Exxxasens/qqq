@@ -12,21 +12,21 @@ const Menu = ({ username }: any) => {
                 Добро пожаловать, { username }
             </h1>
 
-            <div>
+            <div className='list'>
                 <div className='item'>
-                    <NavLink to='/me'>Мой аккаунт</NavLink>
+                    <NavLink to='/me' activeClassName='selected'>Мой аккаунт</NavLink>
                 </div>
 
                 <div className='item'>
-                    <NavLink to='/create'>Создать игру</NavLink>
+                    <NavLink to='/create' activeClassName='selected'>Создать игру</NavLink>
                 </div>
 
                 <div className='item'>
-                    <NavLink to='/game/connect'>Присоединиться к игре</NavLink>
+                    <NavLink to='/game/connect' activeClassName='selected'>Присоединиться к игре</NavLink>
                 </div>
 
                 <div className='item'>
-                    <NavLink to='/logout'>Выход</NavLink>
+                    <NavLink to='/logout' activeClassName='selected'>Выход</NavLink>
                 </div>
             </div>
 

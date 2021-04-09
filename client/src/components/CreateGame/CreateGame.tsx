@@ -5,7 +5,7 @@ import { Redirect } from 'react-router-dom';
 import ApiContext from '../contexts/ApiContext';
 import './CreateGame.scss';
 
-type CreateGame = {
+type CreateGameProps = {
     first_step?: number,
     size?: number
 }
@@ -14,6 +14,8 @@ const SelectGameParams = () => {
     const [size, setSize] = React.useState(3);
     const [firstStep, setFirstStep] = React.useState(3);
     const [isSubmitted, setSubmitted] = React.useState(false);
+
+    console.log('game component')
 
     const handleSizeChange = (e: React.ChangeEvent) => {
         if (e.target instanceof HTMLInputElement) {
@@ -79,7 +81,7 @@ const SelectGameParams = () => {
     )
 }
 
-const CreateGame = ({ first_step = 1, size = 3 }:CreateGame) => {
+const CreateGame = ({ first_step = 1, size = 3 }:CreateGameProps) => {
     const api = React.useContext(ApiContext);
     const request = React.useCallback(() => {
         const options = {
@@ -90,7 +92,7 @@ const CreateGame = ({ first_step = 1, size = 3 }:CreateGame) => {
             body: JSON.stringify({ first_step, size })
         };
         return api.fetchWithToken('/api/game/create', options);
-    }, [api]);
+    }, [api, first_step, size]);
 
     const { data, status } = useRequest(request);
     console.log(data);

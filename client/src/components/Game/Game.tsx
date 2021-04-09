@@ -24,7 +24,50 @@ const copyGame = (game: Game) => {
     return game;
 }
 
-const Game = ({ userId }: any) => {
+const GameInfo = ({ game }: any) => {
+    const { status } = game;
+
+    const getNextStepUsername = () => {
+        const { next_step, first_player, second_player } = game;
+        return (next_step === 1) ? first_player : second_player;
+    }
+
+    const getWinner = () => {
+        let { winner } = game;
+
+        if (winner === 0) {
+            return 'Ничья';
+        }
+
+        if (winner === 1) {
+            return 'Победил игрок ' + game.first_player;
+        }
+
+        if (winner === 2) {
+            return 'Победил игрок ' + game.second_player;
+        }
+
+    }
+
+    if (status === 'started') {
+        return (
+            <div className='game-info'>
+                <h1> Ход игрока { getNextStepUsername() } </h1>
+            </div>
+        )
+
+    } else if (status === 'finished') {
+        return (
+            <div className='game-info'>
+                <h1>{ getWinner() } </h1>
+            </div>
+        )
+    }
+
+    return null; // if game not started or finished
+}
+
+const Game = ({ userId, token, username }: any) => {
     const { id }:any = useParams();
     const initialState:any = null;
     const [game, setGame] = React.useState(initialState);
@@ -32,18 +75,17 @@ const Game = ({ userId }: any) => {
     const [error, setError] = React.useState(null);
     const [isLoading, setLoading] = React.useState(true);
 
-    const handleCellClick = React.useCallback((y:number, x:number) => {
-        console.log(game);
+    const isUserFirstPlayer = game && game.hasOwnProperty('first_player') && game.first_player === username;
+    const isUserSecondPlayer = game && game.hasOwnProperty('second_player') && game.second_player === username;
+
+    const handleCellClick = (y:number, x:number) => {
         const { next_step } = game;
-        if ((next_step === 1 && isUserFirstPlayer(userId)) || (next_step === 2 && isUserSecondPlayer(userId))) {
+        if ((next_step === 1 && isUserFirstPlayer) || (next_step === 2 && isUserSecondPlayer)) {
             console.log('user make a step!');
             console.log({ game_id: id, token: userId, y, x });
-            currentSocket.emit('step', { game_id: id, token: userId, y, x });
+            currentSocket.emit('step', { game_id: id, token, y, x });
         }
-    }, [id, userId, game]);
-
-    const isUserFirstPlayer = (id: string) => game && game.hasOwnProperty('first_player') && game.first_player === id;
-    const isUserSecondPlayer = (id: string) => game && game.hasOwnProperty('second_player') && game.second_player === id;
+    }
 
     React.useEffect(() => {
         const client = socket();
@@ -58,10 +100,14 @@ const Game = ({ userId }: any) => {
 
         client.on('leave_game_announcement', payload => console.log('leave_game_announcement', payload));
 
-        client.on('second_player_join_game', payload => {
-            const { game } = payload; // update game and game status
-            setGame((state:any) => {
-                return  { ...copyGame(state), ...game };
+        client.on('game_update', (payload) => {
+            console.log('game_update', payload);
+            console.log(typeof payload);
+            setGame((state: any) => {
+                if (!state) return {
+                    ...payload
+                }
+                return { ...state, ...payload };
             });
         });
 
@@ -69,8 +115,7 @@ const Game = ({ userId }: any) => {
 
         client.on('game_data', payload => {
             console.log('game data', payload);
-            const response = JSON.parse(payload);
-            setGame(response);
+            setGame(payload);
             setLoading(false);
         });
 
@@ -106,6 +151,7 @@ const Game = ({ userId }: any) => {
     const { game_field, next_step, status, first_player, second_player } = game;
     return (
         <div className='game'>
+
             <div className='players'>
                 <div>
                     <div className='title'>Игрок 1:</div>
@@ -116,12 +162,15 @@ const Game = ({ userId }: any) => {
                     <div className='name'>{ second_player || 'Ожидание игрока' }</div>
                 </div>
             </div>
+
+            <GameInfo game={game} />
+
             <Field 
                 field={game_field}
                 nextStep={next_step}
                 onCellClick={handleCellClick} 
-                isUserFirstPlayer={isUserFirstPlayer(userId)}
-                isUserSecondPlayer={isUserSecondPlayer(userId)}
+                isUserFirstPlayer={isUserFirstPlayer}
+                isUserSecondPlayer={isUserSecondPlayer}
                 gameStatus={status}
             />
         </div>
@@ -130,7 +179,9 @@ const Game = ({ userId }: any) => {
 
 const mapStateToProps = (state: any) => {
     return {
-        userId: state.userId
+        username: state.username,
+        userId: state.userId,
+        token: state.token
     }
 }
 
