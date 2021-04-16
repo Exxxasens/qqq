@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import socket from 'socket.io-client';
 import { useParams } from 'react-router-dom';
 import Field from '../Field';
+import Loading from '../Loading';
 import './Game.scss';
 
 type Game = {
@@ -129,11 +130,7 @@ const Game = ({ userId, token, username }: any) => {
 
     // component loading...
     if (isLoading && !error) {
-        return (
-            <div>
-                loading...
-            </div>
-        )
+        return <Loading/>
     }
 
     // component error
@@ -173,6 +170,10 @@ const Game = ({ userId, token, username }: any) => {
                 isUserSecondPlayer={isUserSecondPlayer}
                 gameStatus={status}
             />
+            
+            <div className='btn-wrapper'>
+                <button>Выход</button>
+            </div>
         </div>
     )
 }

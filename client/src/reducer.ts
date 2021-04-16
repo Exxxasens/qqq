@@ -9,7 +9,8 @@ const reducer = (state: any, action: ActionType) => {
 
     const defaultState = {
         userId: '',
-        username: ''
+        username: '',
+        token: ''
     }
 
     if (!state) {
@@ -43,7 +44,8 @@ const reducer = (state: any, action: ActionType) => {
             return {
                 ...state,
                 userId: null,
-                token: null
+                token: null,
+                username: null
             }
 
         default:

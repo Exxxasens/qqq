@@ -7,13 +7,15 @@ import './CreateGame.scss';
 
 type CreateGameProps = {
     first_step?: number,
-    size?: number
+    size?: number,
+    lines_to_win?: number
 }
 
 const SelectGameParams = () => {
     const [size, setSize] = React.useState(3);
     const [firstStep, setFirstStep] = React.useState(3);
     const [isSubmitted, setSubmitted] = React.useState(false);
+    const [linesToWin, setLinesToWin] = React.useState(3);
 
     console.log('game component')
 
@@ -41,7 +43,7 @@ const SelectGameParams = () => {
         return setSubmitted(true);
     }
 
-    if (isSubmitted) return <CreateGame size={size} first_step={firstStep} />
+    if (isSubmitted) return <CreateGame size={size} first_step={firstStep} lines_to_win={linesToWin} />
 
     return (
         <div className='create-game'>
@@ -81,7 +83,7 @@ const SelectGameParams = () => {
     )
 }
 
-const CreateGame = ({ first_step = 1, size = 3 }:CreateGameProps) => {
+const CreateGame = ({ first_step = 1, size = 3, lines_to_win }:CreateGameProps) => {
     const api = React.useContext(ApiContext);
     const request = React.useCallback(() => {
         const options = {
@@ -89,13 +91,13 @@ const CreateGame = ({ first_step = 1, size = 3 }:CreateGameProps) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ first_step, size })
+            body: JSON.stringify({ first_step, size, lines_to_win })
         };
         return api.fetchWithToken('/api/game/create', options);
     }, [api, first_step, size]);
 
     const { data, status } = useRequest(request);
-    console.log(data);
+
     if (status === 'ok') {
         const url = `/game/${data}`;
         return <Redirect to={url}/>

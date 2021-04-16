@@ -15,6 +15,29 @@
 
     }
 
+    .switch {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        margin-top: 1rem;
+        .switch-btn {
+            background: none;
+            color: inherit;
+            border: none;
+            outline: none;
+    
+            text-decoration: underline;
+            font-size: 1rem;
+    
+    
+            &:hover {
+                cursor: pointer;
+            }
+    
+        }
+    }
+
     .error {
         font-size: 0.8rem;
         color: tomato;
@@ -88,6 +111,10 @@
                 &:hover {
                     background: #505050;
                     cursor: pointer;
+                }
+                &:disabled {
+                    background: none;
+                    cursor: initial;
                 }
             }
         }

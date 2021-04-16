@@ -1,12 +1,18 @@
 import React from 'react';
 import { Redirect } from 'react-router';
 import { connect } from 'react-redux';
-import { logout } from '../../../actions';
-import ApiContext from '../../contexts/ApiContext';
-import useRequest from '../../hooks/useRequest';
+import { logout } from '../../actions';
+// import ApiContext from '../contexts/ApiContext';
+// import useRequest from '../hooks/useRequest';
 
 
-const Logout = ({ logout }) => {
+const Logout = ({ logout, userId }: any) => {
+
+    React.useEffect(() => {
+        logout();
+    }, []);
+
+    /*
     const api = React.useContext(ApiContext);
     const request = React.useCallback(() => {
         return api.logout();
@@ -33,12 +39,26 @@ const Logout = ({ logout }) => {
             </div>
         )
     }
+    */
+
+    if (!userId) {
+        return <Redirect to='/'></Redirect>
+    }
+
+    return null;
 }
 
-const mapDispatchToProps = (dispatch) => {
+const mapStateToProps = (state: any) => {
+    return {
+        username: state.username,
+        userId: state.userId
+    }
+}
+
+const mapDispatchToProps = (dispatch: any) => {
     return {
         logout: () => dispatch(logout())
     }
 }
 
-export default connect(null, mapDispatchToProps)(Logout);
+export default connect(mapStateToProps, mapDispatchToProps)(Logout);

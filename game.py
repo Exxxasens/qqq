@@ -4,14 +4,15 @@ O = 2
 RANDOM = 3
 
 
-def create_game(user_id, n, next_step):
+def create_game(user_id, n, next_step, lines_to_win):
     game = {
         'first_player': user_id,
         'second_player': None,
         'game_field': create_field(n),
         'next_step': next_step,
         'status': 'created',
-        'winner': None
+        'winner': None,
+        'lines_to_win': lines_to_win or n
     }
     return game
 

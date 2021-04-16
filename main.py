@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, Response
+from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context
 from flask_pymongo import PyMongo
 from game import create_game, X, O, RANDOM, step
 from user import create_user, compare_passwords
@@ -10,8 +10,6 @@ import random
 import jwt
 import re
 import os
-import json
-
 
 app = Flask(__name__, static_folder='client/build')
 mongo_client = PyMongo(app, uri=MONGO_URI, ssl=True, ssl_cert_reqs='CERT_NONE')
@@ -39,7 +37,9 @@ def auth_required(f):
             print(data)
             return f(data, *args, **kwargs)
 
-        except:
+        except Exception as e:
+            print(e.__class__, "occurred.")
+            print(e)
             return jsonify(error=True, result='Токен не валиден')
 
     return decorator
@@ -92,7 +92,9 @@ def login():
 
         return jsonify(error=False, result=token)
 
-    except Exception:
+    except Exception as e:
+        print(e.__class__, "occurred.")
+        print(e)
         return on_except()
 
 
@@ -101,10 +103,13 @@ def login():
 def create_game_handler(current_user):
     try:
         body = request.get_json(force=True)
+
         size = int(body['size']) or 3
         first_step = int(body['first_step']) or 1
+        lines_to_win = int(body['lines_to_win']) or size
+
     except (ValueError, KeyError, TypeError) as error:
-        app.logger(error)
+        app.logger.info(error)
         resp = Response({"Ошибка в JSON"}, status=400, mimetype='application/json')
         return resp
 
@@ -117,7 +122,7 @@ def create_game_handler(current_user):
     if not (first_step == X or first_step == O or first_step == RANDOM):
         return jsonify(error=True, result='Параметр first_step может принимать значение 1 или 0')
 
-    game = create_game(current_user['id'], size, first_step)
+    game = create_game(current_user['id'], size, first_step, lines_to_win)
     db.games.insert_one(game)
     return jsonify(error=False, result=str(game['_id']))
 
@@ -231,6 +236,12 @@ def on_join_game(data):
     socket_.emit('join_game_announcement', join_payload, room=data['game_id'])
     socket_.emit('game_data', game_data_payload, room=request.sid)
     clients.append(client_payload)
+
+
+@socket_.on('test')
+def test_socket():
+    print('test event')
+    socket_.emit('test_response', {'test': True})
 
 
 @socket_.on('disconnect')

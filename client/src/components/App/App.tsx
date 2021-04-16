@@ -5,8 +5,8 @@ import './App.scss';
 import { connect } from 'react-redux';
 import Game from '../Game';
 import CreateGame from '../CreateGame';
-import Login from '../Login';
-// import Authentication from '../Authentication';
+import Authentication from '../Authentication';
+import Logout from '../Logout';
 
 type AppProps = {
     userId: string
@@ -21,25 +21,29 @@ const App = ({ userId }: AppProps) => {
                 {
                     isAuth ? 
                     (
-                        <>
-                            <Menu/>
-                            <Switch>
-                                
+                        <Switch>
+                            <Route path='/' exact>
+                                <Menu/>
+                            </Route>
 
-                                <Route path='/create'>
-                                    <CreateGame/>
-                                </Route>
+                            <Route path='/create'>
+                                <Menu/>
+                                <CreateGame/>
+                            </Route>
 
-                                <Route path='/game/:id' exact>
-                                    <Game/>
-                                </Route>
+                            <Route path='/game/:id' exact>
+                                <Game/>
+                            </Route>
 
-                            </Switch>
-                        </>
+                            <Route path='/logout'>
+                                <Logout/>
+                            </Route>
+
+                        </Switch>
                     )
                     :
                     (
-                        <Login/>
+                        <Authentication/>
                     )
                 }
             </div>

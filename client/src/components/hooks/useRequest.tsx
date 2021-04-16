@@ -1,4 +1,4 @@
-import React, { EffectCallback } from 'react';
+import React from 'react';
 
 type RequestStatus = 'loading' | 'error' | 'ok';
 type RequestState = {
