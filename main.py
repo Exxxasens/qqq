@@ -15,7 +15,6 @@ app = Flask(__name__, static_folder='client/build')
 mongo_client = PyMongo(app, uri=MONGO_URI, ssl=True, ssl_cert_reqs='CERT_NONE')
 db = mongo_client.db
 
-
 def on_except(): return jsonify(error=True, result='Произошла неизвестная ошибка')
 
 
@@ -106,7 +105,11 @@ def create_game_handler(current_user):
 
         size = int(body['size']) or 3
         first_step = int(body['first_step']) or 1
-        lines_to_win = int(body['lines_to_win']) or size
+
+        lines_to_win = size
+
+        if 'lines_to_win' in body:
+            lines_to_win = int(body['lines_to_win'])
 
     except (ValueError, KeyError, TypeError) as error:
         app.logger.info(error)
@@ -125,6 +128,53 @@ def create_game_handler(current_user):
     game = create_game(current_user['id'], size, first_step, lines_to_win)
     db.games.insert_one(game)
     return jsonify(error=False, result=str(game['_id']))
+
+
+@app.route('/api/game/<game_id>/events', methods=['GET'])
+def game_events(game_id):
+
+    steam_query = {
+        '$match': {
+            '_id': game_id
+        }
+    }
+
+    def streaming():
+        with db.collection.watch([steam_query]) as stream:
+            while stream.alive:
+                change = stream.try_next()
+                # Note that the ChangeStream's resume token may be updated
+                # even when no changes are returned.
+                print("Current resume token: %r" % (stream.resume_token,))
+                if change is not None:
+                    yield 'Change document'
+                    print(change)
+                    print("Change document: %r" % (change,))
+                    continue
+                # We end up here when there are no recent changes.
+                # Sleep for a while before trying again to avoid flooding
+                # the server with getMore requests when no changes are
+                # available.
+                time.sleep(10)
+
+    return Response(streaming(), mimetype='text/event-stream')
+
+
+@app.route('/api/game/polling/<game_id>', methods=['POST'])
+@auth_required
+def game_polling(current_user, game_id):
+    try:
+        game = db.games.find_one({'_id': ObjectId(game_id)})
+
+        if not game:
+            return jsonify(error=True, result='Игра с данным id не найдена')
+
+        game['_id'] = str(game['_id'])
+        return jsonify(error=False, result=game)
+
+    except Exception as e:
+        app.logger.info(e)
+        return jsonify(error=True, result='Произошла неизвестная ошибка')
 
 
 # Serve React application
@@ -220,6 +270,7 @@ def on_join_game(data):
 
     first_player_username = db.users.find_one({'_id': ObjectId(game['first_player'])})['username']
     second_player_username = None
+
     if game['second_player']:
         second_player_username = db.users.find_one({'_id': ObjectId(game['second_player'])})['username']
 
