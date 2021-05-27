@@ -58,6 +58,9 @@ class Game:
         if 'multiple_lines' in obj:
             game.multiple_lines = obj['multiple_lines']
 
+        if 'score' in obj:
+            game.score = obj['score']
+
         return game
 
     def __init__(self, user_id=None, field_size=3, next_step=X, line_to_win=None, multiple_lines=False):
@@ -91,162 +94,144 @@ class Game:
         size = len(game_field)
 
         def is_safe(y, x):
-            if 0 <= x < size and y >= 0 and y < size:
+            if 0 <= x < size and 0 <= y < size:
                 return True
 
             return False
 
-        if self.multiple_lines:
+        if self.count_empty_cells() > 0 and self.multiple_lines:
+            return
 
-            if self.count_empty_cells() > 0:
-                return
+        def check_diagonal(y, x):
+            _t = None
 
-            def check_diagonal(y, x):
-                _t = None
+            for n in range(self.line_to_win):
+                if is_safe(y + n, x + n):
+                    if game_field[y + n][x + n] != EMPTY:
 
-                for n in range(self.line_to_win):
-                    if is_safe(y + n, x + n):
-                        if game_field[y + n][x + n] != EMPTY:
+                        if _t is None:
+                            _t = game_field[y + n][x + n]
 
-                            if _t is None:
-                                _t = game_field[y + n][x + n]
-
-                            elif _t != game_field[y + n][x + n]:
-                                return None
-
-                        else:
+                        elif _t != game_field[y + n][x + n]:
                             return None
 
                     else:
                         return None
 
-                return _t
+                else:
+                    return None
 
-            def check_right(y, x):
-                _t = None
+            return _t
 
-                for n in range(self.line_to_win):
-                    if is_safe(y, x + n):
-                        if game_field[y][x + n] != EMPTY:
-                            if _t is None:
-                                _t = game_field[y][x + n]
+        def check_right(y, x):
+            _t = None
 
-                            elif _t != game_field[y][x + n]:
-                                return None
+            for n in range(self.line_to_win):
+                if is_safe(y, x + n):
+                    if game_field[y][x + n] != EMPTY:
+                        if _t is None:
+                            _t = game_field[y][x + n]
 
-                        else:
+                        elif _t != game_field[y][x + n]:
                             return None
 
                     else:
                         return None
 
-                return _t
+                else:
+                    return None
 
-            def check_bottom(y, x):
-                _t = None
+            return _t
 
-                for n in range(self.line_to_win):
-                    if is_safe(y + n, x):
-                        if game_field[y + n][x] != EMPTY:
+        def check_bottom(y, x):
+            _t = None
 
-                            if _t is None:
-                                _t = game_field[y + n][x]
+            for n in range(self.line_to_win):
+                if is_safe(y + n, x):
+                    if game_field[y + n][x] != EMPTY:
 
-                            elif _t != game_field[y + n][x]:
-                                return None
+                        if _t is None:
+                            _t = game_field[y + n][x]
 
-                        else:
+                        elif _t != game_field[y + n][x]:
                             return None
 
                     else:
                         return None
 
-                return _t
+                else:
+                    return None
 
-            def check_second_diagonal(y, x):
-                _t = None
+            return _t
 
-                for n in range(self.line_to_win):
-                    if is_safe(y + n, x - n):
-                        if game_field[y + n][x - n] != EMPTY:
+        def check_second_diagonal(y, x):
+            _t = None
 
-                            if _t is None:
-                                _t = game_field[y + n][x - n]
+            for n in range(self.line_to_win):
+                if is_safe(y + n, x - n):
+                    if game_field[y + n][x - n] != EMPTY:
 
-                            elif _t != game_field[y + n][x - n]:
-                                return None
+                        if _t is None:
+                            _t = game_field[y + n][x - n]
 
-                        else:
+                        elif _t != game_field[y + n][x - n]:
                             return None
 
                     else:
                         return None
 
-                return _t
+                else:
+                    return None
 
-            x_counter = 0
-            o_counter = 0
+            return _t
 
-            for i in range(len(game_field)):
-                for j in range(len(game_field[i])):
-                    right = check_right(i, j)
-                    bottom = check_bottom(i, j)
-                    diagonal = check_diagonal(i, j)
-                    second_diagonal = check_second_diagonal(i, j)
+        x_counter = 0
+        o_counter = 0
 
-                    if right == X:
-                        x_counter += 1
-                        print(i, j, 'right')
-                    elif right == O:
-                        o_counter += 1
+        for i in range(len(game_field)):
+            for j in range(len(game_field[i])):
+                right = check_right(i, j)
+                bottom = check_bottom(i, j)
+                diagonal = check_diagonal(i, j)
+                second_diagonal = check_second_diagonal(i, j)
 
-                    if bottom == X:
-                        x_counter += 1
-                        print(i, j, 'bottom')
-                    elif bottom == O:
-                        o_counter += 1
+                if right == X:
+                    x_counter += 1
+                elif right == O:
+                    o_counter += 1
 
-                    if diagonal == X:
-                        x_counter += 1
-                        print(i, j, 'diagonal')
-                    elif diagonal == O:
-                        o_counter += 1
+                if bottom == X:
+                    x_counter += 1
+                elif bottom == O:
+                    o_counter += 1
 
-                    if second_diagonal == X:
-                        x_counter += 1
-                        print(i, j, 'second diagonal')
-                    elif second_diagonal == O:
-                        o_counter += 1
+                if diagonal == X:
+                    x_counter += 1
+                elif diagonal == O:
+                    o_counter += 1
 
-            if x_counter > o_counter:
-                self.end_game(X, x_counter)
+                if second_diagonal == X:
+                    x_counter += 1
+                elif second_diagonal == O:
+                    o_counter += 1
 
-            elif o_counter > x_counter:
-                self.end_game(O, o_counter)
-
-            else:
+        if not self.multiple_lines:
+            if x_counter > 0:
+                self.end_game(X, 1)
+            elif o_counter > 0:
+                self.end_game(O, 1)
+            elif self.count_empty_cells() == 0:
                 self.end_game(None, 0)
+            return
+
+        if x_counter > o_counter:
+            self.end_game(X, x_counter)
+
+        elif o_counter > x_counter:
+            self.end_game(O, o_counter)
 
         else:
-            for i in range(size):
-                horizontal = -2
-                vertical = -2
-
-                for j in range(size):
-                    if vertical == -2:
-                        vertical = game_field[j][i]
-                    if not vertical == game_field[j][i]:
-                        vertical = 0
-
-                    if horizontal == -2:
-                        horizontal = game_field[i][j]
-                    if not horizontal == game_field[i][j]:
-                        horizontal = 0
-
-                if vertical == X or horizontal == X:
-                    self.end_game(X)
-                if vertical == O or horizontal == O:
-                    self.end_game(O)
+            self.end_game(None, 0)
 
     def count_empty_cells(self):
         counter = 0
@@ -258,7 +243,7 @@ class Game:
 
         return counter
 
-    def end_game(self, winner=None, score = 1):
+    def end_game(self, winner=None, score=1):
         self.status = FINISHED
         self.winner = winner
         self.score = score

@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_pymongo import PyMongo
-from game import Game, X, O, RANDOM, FINISHED
+from game import Game, X, O, RANDOM, FINISHED, CREATED
 from user import create_user, compare_passwords
 from functools import wraps
 from settings import MONGO_URI, SECRET
@@ -11,15 +11,17 @@ import os
 import re
 import time
 import logging
+import eventlet
 
 app = Flask(__name__, static_folder='client/build')
 app.logger.setLevel(logging.DEBUG)
 mongo_client = PyMongo(app, uri=MONGO_URI, ssl=True, ssl_cert_reqs='CERT_NONE')
+
 db = mongo_client.db
 
 # SocketIO implementation
 async_mode = None
-socket_ = SocketIO(app, logging=True)
+socket_ = SocketIO(app, logging=True, cors_allowed_origins='*')
 clients = []
 
 
@@ -31,14 +33,14 @@ def update_user_score(game: Game):
 
         winner_upd = {
             '$inc': {
-                'games_played': 1
+                'games_played': 1,
+                'won': 1
             }
         }
 
         default_upd = {
             '$inc': {
                 'games_played': 1,
-                'won': 1
             }
         }
 
@@ -252,34 +254,22 @@ def step_game(current_user, game_id):
 
         data = db.games.find_one({'_id': ObjectId(game_id)})
 
+        print('step')
+
         if not data:
             return jsonify(error=True, result='Игра с указанным game_id не найдена')
 
         app.logger.info(data)
 
         game = Game.create_from_object(data)
-
         app.logger.info(game)
 
-        if not game.is_game_started():
-            return jsonify(error=True, result='Игра еще не начата')
-
         if game.can_step(current_user['id']):
-
             if not game.is_empty_cell(y, x):
                 return jsonify(error=True, result='Клетка не пустая')
-
             game.step(y, x)
-
             if game.status == FINISHED:
                 update_user_score(game)
-
-            query = {
-                '$set': game.get_object()
-            }
-
-            db.games.update_one({'_id': ObjectId(game_id)}, query)
-
             game_update = {
                 'field': game.field,
                 'status': game.status,
@@ -287,9 +277,12 @@ def step_game(current_user, game_id):
                 'winner': game.winner,
                 'score': game.score
             }
-
+            query = {
+                '$set': game_update
+            }
+            db.games.update_one({'_id': ObjectId(game_id)}, query)
             socket_.emit('game_update', game_update, room=game_id)
-            return jsonify(error=False, result=game.get_object)
+            return jsonify(error=False, result=game.get_object())
 
         else:
             return jsonify(error=True, result='Игрок не может совершить ход')
@@ -333,13 +326,18 @@ def join_game_api(current_user, game_id):
         game.join_game(current_user['id'])
 
         update = {
-            'second_player': current_user['username'],
+            'second_player': current_user['id'],
             'status': game.status,
             'next_step': game.next_step,
             'score': game.score
         }
 
         db.games.update_one(query, {'$set': update})
+        first_player_username = db.users.find_one({'_id': ObjectId(game.first_player)})['username']
+        update['second_player'] = current_user['username']
+        game_object = game.get_object()
+        game_object['second_player'] = current_user['username']
+        game_object['first_player'] = first_player_username
 
         # change date for socket
         socket_.emit('game_update', update, room=game_id)
@@ -354,7 +352,6 @@ def join_game_api(current_user, game_id):
 @app.route('/api/user/me', methods=['POST'])
 @auth_required
 def get_user(current_user):
-
     user = db.users.find_one({'_id': ObjectId(current_user['id'])})
 
     del user['password']
@@ -383,7 +380,7 @@ def find_client(sid):
         if client['room'] and client['sid'] == sid:
             return client
 
-    return None # if client not found
+    return None  # if client not found
 
 
 @socket_.on('join_game')
@@ -433,7 +430,8 @@ def on_join_game(data):
         update = {
             'second_player': user['id'],
             'status': 'started',
-            'next_step': game.next_step
+            'next_step': game.next_step,
+            'score': game.score
         }
 
         db.games.update_one(query, {'$set': update})
@@ -593,4 +591,4 @@ def on_step(data):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8080)
+    socket_.run(app, debug=True)

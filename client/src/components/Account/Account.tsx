@@ -39,7 +39,7 @@ const Account = () => {
             if (won === 0) {
                 wonStat = <div>Побед: { 0 }</div>
             } else {
-                wonStat = <div>Побед: { won } ({ getPercent(games_played / won)  })</div>
+                wonStat = <div>Побед: { won } ({ getPercent(won / games_played)  })</div>
             }
 
             return (
