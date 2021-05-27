@@ -7,6 +7,7 @@ import { logout } from '../../actions';
 
 
 const Logout = ({ logout, userId }: any) => {
+    // eslint-disable-next-line
 
     React.useEffect(() => {
         logout();
@@ -42,6 +43,7 @@ const Logout = ({ logout, userId }: any) => {
     */
 
     if (!userId) {
+        console.log('no user id')
         return <Redirect to='/'></Redirect>
     }
 

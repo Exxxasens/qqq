@@ -1,0 +1,50 @@
+.connect-btn {
+    padding: 0.75rem 2rem;
+    border: 1px solid #505050;
+    background: transparent;
+    color: white;
+    font-weight: bold;
+    outline: none;
+}
+
+.connect {
+    margin-top: 1rem;
+    display: flex;
+    form {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+        }
+    }
+    input {
+        padding: 0.5rem;
+        width: 10rem;
+        background: #505050;
+        box-shadow: none;
+        border: none;
+        color: inherit;
+        outline: none;
+        border: none;
+        margin: 0.5rem 0;
+        font-size: 1rem;
+        margin-left: auto;
+    }
+    button {
+        padding: 0.75rem 2rem;
+        border: 1px solid #505050;
+        background: transparent;
+        color: white;
+        font-weight: bold;
+        outline: none;
+        &:hover {
+            background: #505050;
+            cursor: pointer;
+        }
+    }
+}

@@ -7,6 +7,8 @@ import Game from '../Game';
 import CreateGame from '../CreateGame';
 import Authentication from '../Authentication';
 import Logout from '../Logout';
+import Connect from '../Connect';
+import Account from '../Account';
 
 type AppProps = {
     userId: string
@@ -31,6 +33,11 @@ const App = ({ userId }: AppProps) => {
                                 <CreateGame/>
                             </Route>
 
+                            <Route path='/game/connect'>
+                                <Menu/>
+                                <Connect/>
+                            </Route>
+
                             <Route path='/game/:id' exact>
                                 <Game/>
                             </Route>
@@ -39,11 +46,22 @@ const App = ({ userId }: AppProps) => {
                                 <Logout/>
                             </Route>
 
+                            <Route path='/me'>
+                                <Account/>
+                            </Route>
+
                         </Switch>
                     )
                     :
                     (
-                        <Authentication/>
+                        <Switch>
+                            <Route path='/logout'>
+                                <Logout/>
+                            </Route>
+                            <Route path='/'>
+                                <Authentication/>
+                            </Route>
+                        </Switch>
                     )
                 }
             </div>

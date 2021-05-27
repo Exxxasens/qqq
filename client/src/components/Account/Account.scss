@@ -1,0 +1,13 @@
+.account {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .stats {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0.5rem 2rem;
+        border: 1px solid #505050;
+    }
+}

@@ -23,7 +23,12 @@ class ApiService {
         }
         const { error, result }:ServerResponse = await response.json();
         if (error) {
-            console.log(result);
+
+            if (result === 'Токен не валиден') {
+                console.log('token deleted')
+                localStorage.clear();
+            }
+
             throw new Error(result);
         }
         return result;
@@ -74,6 +79,10 @@ class ApiService {
         }
 
         return this.fetchResource(url, config);
+    }
+
+    getMe = () => {
+        return this.fetchWithToken(`api/user/me`, { method: 'POST' });
     }
 
 }

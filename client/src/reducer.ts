@@ -41,6 +41,7 @@ const reducer = (state: any, action: ActionType) => {
             }
 
         case 'USER_LOGOUT':
+            localStorage.clear();
             return {
                 ...state,
                 userId: null,

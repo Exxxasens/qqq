@@ -1,14 +1,63 @@
-.game {
-    margin: 1rem;
-    .players {
-        margin: 0 0 1rem 0;
-        border: 1px solid #505050;
-        > div {
+.game-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .game {
+        margin: 1rem;
+    
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    
+        .settings {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1rem;
+            width: 100%;
+            margin: 0 0 1rem 0;
+            border: 1px solid #505050;
             padding: 0.5rem;
-            .title {
-                margin-right: 0.25rem;
-                font-weight: bold;
+            
+            .settings-list {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                font-size: 12px;
             }
+        }
+        .players {
+            display: flex;
+            justify-content: space-between;
+            margin: 0 0 1rem 0;
+            border: 1px solid #505050;
+            width: 100%;
+            flex-wrap: wrap;
+            > div {
+                display: flex;
+                flex-wrap: wrap;
+                font-size: 14px;
+                padding: 0.5rem;
+                .title {
+                    margin-right: 0.25rem;
+                    font-weight: bold;
+                }
+            }
+        }
+    }
+    button {
+        padding: 0.75rem 2rem;
+        border: 1px solid #505050;
+        background: transparent;
+        color: white;
+        font-weight: bold;
+        outline: none;
+        margin-top: 1rem;
+        &:hover {
+            background: #505050;
+            cursor: pointer;
         }
     }
 }

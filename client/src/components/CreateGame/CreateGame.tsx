@@ -8,22 +8,26 @@ import './CreateGame.scss';
 type CreateGameProps = {
     first_step?: number,
     size?: number,
-    lines_to_win?: number
+    line_to_win?: number,
+    multiple_lines?: boolean
 }
 
 const SelectGameParams = () => {
     const [size, setSize] = React.useState(3);
     const [firstStep, setFirstStep] = React.useState(3);
     const [isSubmitted, setSubmitted] = React.useState(false);
-    const [linesToWin, setLinesToWin] = React.useState(3);
-
-    console.log('game component')
+    const [lineToWin, setLineToWin] = React.useState(3);
+    const [multipleLines, setMuiltipleLines] = React.useState(true)
 
     const handleSizeChange = (e: React.ChangeEvent) => {
         if (e.target instanceof HTMLInputElement) {
-            console.log('ok')
             const value = parseInt(e.target.value);
             if (!value || value > 10 || value < 3) return;
+
+            if (lineToWin > value) {
+                setLineToWin(value);
+            }
+
             return setSize(value)
         }
     }
@@ -36,6 +40,27 @@ const SelectGameParams = () => {
             }
         } 
     }
+
+    const handleLineToWin = (e: React.ChangeEvent) => {
+        if (e.target instanceof HTMLInputElement) {
+            const value = parseInt(e.target.value);
+            if (!value) return 
+
+            if (value > size) return setLineToWin(size);
+            if (value < 2) return setLineToWin(2)
+
+            return setLineToWin(value)
+        }
+    }
+
+    const handleMultipleLinesChange = (e: React.ChangeEvent) => {
+        if (e.target instanceof HTMLSelectElement) {
+            const value = e.target.value;
+            if (value === "true") setMuiltipleLines(true);
+            if (value === "false") setMuiltipleLines(false);
+        }
+
+    }
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,7 +68,13 @@ const SelectGameParams = () => {
         return setSubmitted(true);
     }
 
-    if (isSubmitted) return <CreateGame size={size} first_step={firstStep} lines_to_win={linesToWin} />
+    if (isSubmitted) 
+        return <CreateGame 
+                size={size} 
+                first_step={firstStep} 
+                line_to_win={lineToWin} 
+                multiple_lines={multipleLines} 
+            />
 
     return (
         <div className='create-game'>
@@ -73,6 +104,23 @@ const SelectGameParams = () => {
                     </select>
                 </div>
 
+                <div className='input-wrapper'>
+                    <label htmlFor="line-to-win">
+                        Размер линии:
+                    </label>
+                    <input id='line-to-win' type='number' value={lineToWin} onChange={handleLineToWin}/>
+                </div>
+
+                <div className='input-wrapper'>
+                    <label htmlFor="mul-line">
+                        Условие победы:
+                    </label>
+                    <select id='mul-line' onChange={handleMultipleLinesChange} value={String(multipleLines)}>
+                        <option value='true'>Собрать как можно больше линий</option>
+                        <option value='false'>Собрать линию первым</option>
+                    </select>
+                </div>
+
                 <div className='submit-btn-wrapper'>
                     <button type='submit'>Создать</button>
                 </div>
@@ -83,7 +131,7 @@ const SelectGameParams = () => {
     )
 }
 
-const CreateGame = ({ first_step = 1, size = 3, lines_to_win }:CreateGameProps) => {
+const CreateGame = ({ first_step = 1, size = 3, line_to_win, multiple_lines }:CreateGameProps) => {
     const api = React.useContext(ApiContext);
     const request = React.useCallback(() => {
         const options = {
@@ -91,10 +139,10 @@ const CreateGame = ({ first_step = 1, size = 3, lines_to_win }:CreateGameProps) 
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ first_step, size, lines_to_win })
+            body: JSON.stringify({ first_step, size, line_to_win, multiple_lines })
         };
         return api.fetchWithToken('/api/game/create', options);
-    }, [api, first_step, size]);
+    }, [api, first_step, size, line_to_win, multiple_lines]);
 
     const { data, status } = useRequest(request);
 

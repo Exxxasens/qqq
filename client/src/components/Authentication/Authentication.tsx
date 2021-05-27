@@ -50,7 +50,7 @@ const Authentication = ({ login }: any): any => {
             setLoading(true);
             setError(null);
 
-            api.register(username, password)
+            return api.register(username, password)
                 .then(() => {
                     setError('Пользователь успешно зарегистрирован');
                     setLoading(false);
@@ -171,7 +171,5 @@ const mapActionToProps = (dispatch: any) => {
         login: (token: string) => dispatch(login(token))
     }
 }
-
-
 
 export default connect(null, mapActionToProps)(Authentication);
